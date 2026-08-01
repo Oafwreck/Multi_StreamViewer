@@ -1,0 +1,61 @@
+/* Apple Design · compact media workspace · dark material system */
+:root {
+  --color-paper: oklch(12% 0.012 255);
+  --color-paper-2: oklch(16% 0.014 255);
+  --color-paper-3: oklch(20% 0.016 255);
+  --color-paper-raised: oklch(24% 0.018 255);
+  --color-ink: oklch(96% 0.006 255);
+  --color-ink-soft: oklch(82% 0.010 255);
+  --color-muted: oklch(68% 0.014 255);
+  --color-rule: oklch(29% 0.018 255);
+  --color-rule-strong: oklch(42% 0.025 255);
+  --color-accent: oklch(69% 0.17 250);
+  --color-accent-hover: oklch(74% 0.15 250);
+  --color-accent-ink: oklch(14% 0.025 250);
+  --color-focus: oklch(78% 0.15 235);
+  --color-error: oklch(70% 0.18 25);
+  --color-success: oklch(75% 0.14 145);
+  --color-shadow: oklch(4% 0.008 255);
+  --color-material: color-mix(in oklch, var(--color-paper-2) 84%, transparent);
+
+  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", sans-serif;
+
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.375rem;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-press: 100ms;
+  --dur-short: 180ms;
+  --dur-long: 320ms;
+
+  --rule-thin: 1px;
+  --rule-heavy: 2px;
+  --radius-sm: 0.625rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.125rem;
+  --radius-pill: 999px;
+
+  --shadow-panel: 0 20px 48px color-mix(in oklch, var(--color-shadow) 58%, transparent);
+  --shadow-nav: 0 8px 28px color-mix(in oklch, var(--color-shadow) 30%, transparent);
+  --z-base: 1;
+  --z-raised: 10;
+  --z-sticky: 200;
+  --z-nav: 300;
+  --z-toast: 500;
+}
+
