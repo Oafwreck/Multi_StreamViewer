@@ -158,10 +158,13 @@ export function buildChatUrl(stream, hostname) {
   }
 
   if (stream.provider === "youtube") {
-    const params = new URLSearchParams({ v: stream.sourceId, embed_domain: parent });
+    const params = new URLSearchParams({
+      v: stream.sourceId,
+      embed_domain: parent,
+      dark_theme: "1",
+    });
     return `https://www.youtube.com/live_chat?${params}`;
   }
 
   throw new StreamInputError("provider", "未対応の配信サービスです。");
 }
-
