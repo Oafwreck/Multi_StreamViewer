@@ -78,6 +78,13 @@ export function createTwitchPlayerController(host, stream, hostname, { onStatus 
   });
 
   return {
+    getMuted() {
+      try {
+        return player?.getMuted?.() ?? desiredMuted;
+      } catch {
+        return desiredMuted;
+      }
+    },
     setMuted(muted) {
       desiredMuted = Boolean(muted);
       try {

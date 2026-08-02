@@ -1,10 +1,12 @@
 import { APP_CONFIG, PROVIDER_LABELS } from "./config.js";
+import { resolveRestoredMute } from "./audio-focus.js";
 import { buildChatUrl, buildPlayerUrl } from "./providers.js";
 import { createTwitchPlayerController } from "./twitch-player.js";
 import { keepYouTubeLivePlaying } from "./youtube-player.js";
 
 const STATUS_LABELS = Object.freeze({
   loading: "読み込み中",
+  reconnecting: "再接続中",
   ready: "準備完了",
   playing: "再生中",
   paused: "一時停止",
@@ -49,7 +51,7 @@ export function createRenderer({ onSelect, onRemove, onReorder }) {
       const safeStatus = STATUS_LABELS[nextStatus] ? nextStatus : "unknown";
       status.dataset.state = safeStatus;
       status.textContent = STATUS_LABELS[safeStatus];
-      if (safeStatus !== "loading") {
+      if (!["loading", "reconnecting"].includes(safeStatus)) {
         card.hasLoaded = true;
         window.clearTimeout(card.loadWarningTimer);
         loading.hidden = true;
@@ -177,14 +179,23 @@ export function createRenderer({ onSelect, onRemove, onReorder }) {
 
   function syncAudio(state) {
     if (state.audioFocus) {
+      if (!previousAudioFocus) {
+        cards.forEach((card) => {
+          card.mutedBeforeAudioFocus = card.playerController?.getMuted?.() ?? true;
+        });
+      }
       cards.forEach((card, id) => {
         card.shouldBeMuted = id !== state.selectedId;
         card.playerController?.setMuted(card.shouldBeMuted);
       });
     } else if (previousAudioFocus) {
-      cards.forEach((card) => {
-        card.shouldBeMuted = true;
-        card.playerController?.setMuted(true);
+      cards.forEach((card, id) => {
+        card.shouldBeMuted = resolveRestoredMute(
+          card.mutedBeforeAudioFocus,
+          id === state.selectedId,
+        );
+        card.playerController?.setMuted(card.shouldBeMuted);
+        delete card.mutedBeforeAudioFocus;
       });
     }
     previousAudioFocus = state.audioFocus;

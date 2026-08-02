@@ -9,12 +9,12 @@ export const YOUTUBE_PLAYER_STATES = Object.freeze({
   cued: 5,
 });
 
-export function youtubeStateToStatus(state) {
+export function youtubeStateToStatus(state, { hasPlayed = true, isLive = false } = {}) {
   switch (state) {
     case YOUTUBE_PLAYER_STATES.playing: return "playing";
     case YOUTUBE_PLAYER_STATES.paused: return "paused";
     case YOUTUBE_PLAYER_STATES.buffering: return "loading";
-    case YOUTUBE_PLAYER_STATES.ended: return "ended";
+    case YOUTUBE_PLAYER_STATES.ended: return !hasPlayed || isLive ? "reconnecting" : "ended";
     case YOUTUBE_PLAYER_STATES.cued: return "ready";
     default: return "loading";
   }
@@ -62,7 +62,10 @@ function loadYouTubeApi() {
 
 function isLivePlayer(player) {
   try {
-    return player.getVideoData?.().isLive === true;
+    const data = player.getVideoData?.() ?? {};
+    return data.isLive === true
+      || data.isLiveContent === true
+      || data.is_live === true;
   } catch {
     return false;
   }
@@ -77,6 +80,7 @@ export function keepYouTubeLivePlaying(frame, videoId, { onStatus = () => {} } =
   let lastProgressAt = stateSince;
   let lastTime = -1;
   let desiredMuted = true;
+  let hasPlayed = false;
 
   function recover() {
     if (!player || document.hidden) return;
@@ -123,15 +127,22 @@ export function keepYouTubeLivePlaying(frame, videoId, { onStatus = () => {} } =
               stateSince,
               lastProgressAt,
               now,
-              isLive: isLivePlayer(player),
+              isLive: isLivePlayer(player)
+                || (!hasPlayed && [YOUTUBE_PLAYER_STATES.ended, YOUTUBE_PLAYER_STATES.buffering].includes(state)),
             })) recover();
           }, APP_CONFIG.youtubeHealthCheckMs);
         },
         onStateChange(event) {
           state = event.data;
           stateSince = Date.now();
-          if (state === YOUTUBE_PLAYER_STATES.playing) lastProgressAt = stateSince;
-          onStatus(youtubeStateToStatus(state));
+          if (state === YOUTUBE_PLAYER_STATES.playing) {
+            hasPlayed = true;
+            lastProgressAt = stateSince;
+          }
+          onStatus(youtubeStateToStatus(state, {
+            hasPlayed,
+            isLive: isLivePlayer(player),
+          }));
         },
         onError() {
           onStatus("error");
@@ -144,6 +155,13 @@ export function keepYouTubeLivePlaying(frame, videoId, { onStatus = () => {} } =
   });
 
   return {
+    getMuted() {
+      try {
+        return player?.isMuted?.() ?? desiredMuted;
+      } catch {
+        return desiredMuted;
+      }
+    },
     setMuted(muted) {
       desiredMuted = Boolean(muted);
       try {
