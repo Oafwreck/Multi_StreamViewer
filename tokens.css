@@ -54,6 +54,8 @@
   --size-control: 2.5rem;
   --size-control-compact: 2.25rem;
   --size-chat: 22rem;
+  --size-focus-rail: 9rem;
+  --size-focus-thumbnail: clamp(12rem, 24cqw, 16rem);
 
   --shadow-panel: 0 20px 48px color-mix(in oklch, var(--color-shadow) 58%, transparent);
   --shadow-nav: 0 8px 28px color-mix(in oklch, var(--color-shadow) 30%, transparent);

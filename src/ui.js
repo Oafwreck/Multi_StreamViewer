@@ -1,6 +1,7 @@
 import { APP_CONFIG, PROVIDER_LABELS } from "./config.js";
 import { resolveRestoredMute } from "./audio-focus.js";
 import { buildChatUrl, buildPlayerUrl } from "./providers.js";
+import { createKickPlayerController } from "./kick-player.js";
 import { createTwitchPlayerController } from "./twitch-player.js";
 import { keepYouTubeLivePlaying } from "./youtube-player.js";
 
@@ -79,6 +80,11 @@ export function createRenderer({ onSelect, onRemove, onReorder }) {
         { onStatus: updateStatus },
       );
       card.playerController.setMuted(card.shouldBeMuted ?? true);
+      return;
+    }
+
+    if (stream.provider === "kick") {
+      card.playerController = createKickPlayerController(host, stream, { onStatus: updateStatus });
       return;
     }
 
@@ -220,6 +226,22 @@ export function createRenderer({ onSelect, onRemove, onReorder }) {
 
     elements.chatTitle.textContent = selected.label;
     elements.chatProvider.textContent = PROVIDER_LABELS[selected.provider];
+
+    if (selected.provider === "kick") {
+      const empty = document.createElement("div");
+      empty.className = "chat-empty";
+      const message = document.createElement("p");
+      message.textContent = "KICKチャットは公式の埋め込みに対応していません。";
+      const link = document.createElement("a");
+      link.className = "button button--secondary";
+      link.href = selected.canonicalUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "KICKでチャットを開く";
+      empty.append(message, link);
+      elements.chatSlot.append(empty);
+      return;
+    }
 
     if (selected.provider === "youtube") {
       const note = document.createElement("p");

@@ -1,5 +1,6 @@
 const YOUTUBE_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
 const TWITCH_CHANNEL_PATTERN = /^[A-Za-z0-9_]{3,25}$/;
+const KICK_CHANNEL_PATTERN = /^[A-Za-z0-9_-]{2,32}$/;
 const TWITCH_RESERVED_PATHS = new Set([
   "directory",
   "downloads",
@@ -8,6 +9,13 @@ const TWITCH_RESERVED_PATHS = new Set([
   "search",
   "settings",
   "videos",
+]);
+const KICK_RESERVED_PATHS = new Set([
+  "browse",
+  "categories",
+  "dashboard",
+  "following",
+  "search",
 ]);
 
 export class StreamInputError extends Error {
@@ -79,6 +87,22 @@ function parseTwitchUrl(url) {
   };
 }
 
+function parseKickUrl(url) {
+  const host = url.hostname.toLowerCase().replace(/^www\./, "");
+  if (host !== "kick.com") return null;
+
+  const channel = (url.pathname.split("/").filter(Boolean)[0] ?? "").toLowerCase();
+  if (!KICK_CHANNEL_PATTERN.test(channel) || KICK_RESERVED_PATHS.has(channel)) {
+    throw new StreamInputError("kick-channel", "KICKチャンネルURLを確認してください。");
+  }
+  return {
+    provider: "kick",
+    sourceId: channel,
+    label: channel,
+    canonicalUrl: `https://kick.com/${channel}`,
+  };
+}
+
 export function parseStreamInput(rawInput) {
   const value = String(rawInput ?? "").trim();
   if (!value) {
@@ -100,6 +124,19 @@ export function parseStreamInput(rawInput) {
   }
 
   const prefixedTwitch = value.match(/^twitch:(.+)$/i);
+  const prefixedKick = value.match(/^kick:(.+)$/i);
+  if (prefixedKick) {
+    const channel = prefixedKick[1].trim().toLowerCase();
+    if (!KICK_CHANNEL_PATTERN.test(channel) || KICK_RESERVED_PATHS.has(channel)) {
+      throw new StreamInputError("kick-channel", "KICKチャンネル名を確認してください。");
+    }
+    return {
+      provider: "kick",
+      sourceId: channel,
+      label: channel,
+      canonicalUrl: `https://kick.com/${channel}`,
+    };
+  }
   const bareTwitch = prefixedTwitch ? prefixedTwitch[1].trim() : value;
   if (TWITCH_CHANNEL_PATTERN.test(bareTwitch) && !bareTwitch.includes(".")) {
     const channel = bareTwitch.toLowerCase();
@@ -116,12 +153,12 @@ export function parseStreamInput(rawInput) {
 
   const url = parseUrlCandidate(value);
   if (!url) {
-    throw new StreamInputError("invalid-url", "URLを読み取れませんでした。TwitchまたはYouTubeのURLを入力してください。");
+    throw new StreamInputError("invalid-url", "URLを読み取れませんでした。Twitch、YouTube、KICKのURLを入力してください。");
   }
 
-  const parsed = parseYouTubeUrl(url) ?? parseTwitchUrl(url);
+  const parsed = parseYouTubeUrl(url) ?? parseTwitchUrl(url) ?? parseKickUrl(url);
   if (!parsed) {
-    throw new StreamInputError("unsupported", "TwitchまたはYouTubeの配信URLだけを追加できます。");
+    throw new StreamInputError("unsupported", "Twitch、YouTube、KICKの配信URLだけを追加できます。");
   }
   return parsed;
 }
@@ -154,6 +191,11 @@ export function buildPlayerUrl(stream, hostname, origin = "") {
     return `https://www.youtube-nocookie.com/embed/${stream.sourceId}?${params}`;
   }
 
+  if (stream.provider === "kick") {
+    const params = new URLSearchParams({ autoplay: "true", muted: "true" });
+    return `https://player.kick.com/${stream.sourceId}?${params}`;
+  }
+
   throw new StreamInputError("provider", "未対応の配信サービスです。");
 }
 
@@ -172,6 +214,8 @@ export function buildChatUrl(stream, hostname) {
     });
     return `https://www.youtube.com/live_chat?${params}`;
   }
+
+  if (stream.provider === "kick") return "";
 
   throw new StreamInputError("provider", "未対応の配信サービスです。");
 }

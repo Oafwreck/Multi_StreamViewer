@@ -66,7 +66,7 @@ export function reduceState(state, action) {
 export function hydrateState(value) {
   if (!value || !Array.isArray(value.streams)) return { ...DEFAULT_STATE };
   const streams = value.streams
-    .filter((stream) => stream && ["twitch", "youtube"].includes(stream.provider))
+    .filter((stream) => stream && ["twitch", "youtube", "kick"].includes(stream.provider))
     .filter((stream) => typeof stream.id === "string" && typeof stream.sourceId === "string")
     .slice(0, APP_CONFIG.maxStreams);
   const selectedId = streams.some((stream) => stream.id === value.selectedId)

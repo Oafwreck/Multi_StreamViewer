@@ -12,4 +12,5 @@ export const APP_CONFIG = Object.freeze({
 export const PROVIDER_LABELS = Object.freeze({
   twitch: "Twitch",
   youtube: "YouTube",
+  kick: "KICK",
 });
