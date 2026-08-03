@@ -1,6 +1,26 @@
+import { APP_CONFIG } from "./config.js";
 import { buildPlayerUrl } from "./providers.js";
 
 let apiPromise;
+
+function qualityHeight(quality) {
+  const match = String(quality).match(/(\d{3,4})p/i);
+  return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+}
+
+export function selectTwitchQuality(
+  qualities,
+  maxHeight = APP_CONFIG.focusBackgroundQualityMaxHeight,
+) {
+  const candidates = qualities
+    .map(String)
+    .filter((quality) => Number.isFinite(qualityHeight(quality)));
+  const withinLimit = candidates
+    .filter((quality) => qualityHeight(quality) <= maxHeight)
+    .sort((a, b) => qualityHeight(b) - qualityHeight(a));
+  if (withinLimit.length > 0) return withinLimit[0];
+  return candidates.sort((a, b) => qualityHeight(a) - qualityHeight(b))[0] ?? null;
+}
 
 function loadTwitchApi() {
   if (globalThis.Twitch?.Player) return Promise.resolve(globalThis.Twitch);
@@ -42,6 +62,21 @@ export function createTwitchPlayerController(host, stream, hostname, { onStatus 
   let disposed = false;
   let player;
   let desiredMuted = true;
+  let desiredQuality = { type: "exact", value: "auto" };
+
+  function applyQuality() {
+    if (!player) return true;
+    try {
+      const quality = desiredQuality.type === "low"
+        ? selectTwitchQuality(player.getQualities?.() ?? [], desiredQuality.maxHeight)
+        : desiredQuality.value;
+      if (!quality) return false;
+      player.setQuality(quality);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   loadTwitchApi().then((Twitch) => {
     if (disposed || !host.isConnected) return;
@@ -71,6 +106,7 @@ export function createTwitchPlayerController(host, stream, hostname, { onStatus 
     player.addEventListener(Twitch.Player.READY, () => {
       if (disposed) return;
       player.setMuted(desiredMuted);
+      applyQuality();
       onStatus("ready");
     });
   }).catch(() => {
@@ -92,6 +128,21 @@ export function createTwitchPlayerController(host, stream, hostname, { onStatus 
       } catch {
         // The desired state is applied when the player becomes ready.
       }
+    },
+    getQuality() {
+      try {
+        return player?.getQuality?.() ?? "auto";
+      } catch {
+        return "auto";
+      }
+    },
+    setQuality(quality) {
+      desiredQuality = { type: "exact", value: quality || "auto" };
+      return applyQuality();
+    },
+    setLowQuality(maxHeight = APP_CONFIG.focusBackgroundQualityMaxHeight) {
+      desiredQuality = { type: "low", maxHeight };
+      return applyQuality();
     },
     dispose() {
       disposed = true;

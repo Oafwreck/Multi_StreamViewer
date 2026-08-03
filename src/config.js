@@ -6,6 +6,7 @@ export const APP_CONFIG = Object.freeze({
   youtubeHealthCheckMs: 5_000,
   youtubeStallRecoveryMs: 20_000,
   youtubePauseRecoveryMs: 60_000,
+  focusBackgroundQualityMaxHeight: 160,
   serverPort: 4173,
 });
 

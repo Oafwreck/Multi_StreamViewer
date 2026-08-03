@@ -80,6 +80,7 @@ export function createRenderer({ onSelect, onRemove, onReorder }) {
         { onStatus: updateStatus },
       );
       card.playerController.setMuted(card.shouldBeMuted ?? true);
+      if (card.shouldLimitQualityForFocus) card.playerController.setLowQuality();
       return;
     }
 
@@ -207,6 +208,29 @@ export function createRenderer({ onSelect, onRemove, onReorder }) {
     previousAudioFocus = state.audioFocus;
   }
 
+  function syncFocusQuality(state) {
+    state.streams.forEach((stream) => {
+      if (stream.provider !== "twitch") return;
+      const card = cards.get(stream.id);
+      const shouldLimit = state.layoutMode === "focus" && stream.id !== state.selectedId;
+      card.shouldLimitQualityForFocus = shouldLimit;
+
+      if (shouldLimit && !card.qualityLimitedForFocus) {
+        card.qualityBeforeFocus = card.playerController?.getQuality?.() ?? "auto";
+        card.qualityLimitedForFocus = card.playerController?.setLowQuality?.(
+          APP_CONFIG.focusBackgroundQualityMaxHeight,
+        ) !== false;
+        return;
+      }
+
+      if (!shouldLimit && card.qualityLimitedForFocus) {
+        card.playerController?.setQuality?.(card.qualityBeforeFocus ?? "auto");
+        card.qualityLimitedForFocus = false;
+        delete card.qualityBeforeFocus;
+      }
+    });
+  }
+
   function renderChat(state) {
     const selected = state.streams.find((stream) => stream.id === state.selectedId) ?? null;
     const nextKey = selected ? `${selected.provider}:${selected.sourceId}` : null;
@@ -265,6 +289,7 @@ export function createRenderer({ onSelect, onRemove, onReorder }) {
   return function render(state) {
     syncCards(state);
     syncAudio(state);
+    syncFocusQuality(state);
     renderChat(state);
     elements.count.textContent = String(state.streams.length);
     elements.empty.hidden = state.streams.length > 0;
