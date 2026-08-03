@@ -3,41 +3,35 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="description" content="TwitchとYouTubeを最大8画面で視聴し、選択中の配信チャットを切り替えるマルチビューアー。">
+    <meta name="description" content="Twitch、YouTube、KICKを最大8画面で視聴するマルチビューアー。">
     <title>MultiView Desk</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <header class="nav-edge" aria-label="アプリヘッダー">
       <a class="wordmark" href="#main">MultiView</a>
+      <form id="add-form" class="add-form" novalidate>
+        <label for="stream-input">配信</label>
+        <div class="add-form__row">
+          <input
+            id="stream-input"
+            name="stream"
+            type="text"
+            inputmode="url"
+            autocomplete="off"
+            placeholder="Twitch / YouTube / KICK のURL"
+            aria-describedby="stream-helper"
+            required
+          >
+          <button id="add-button" class="button button--primary" type="submit">追加</button>
+        </div>
+        <p id="stream-helper" class="form-helper">YouTube動画IDは「yt:VIDEO_ID」でも追加できます</p>
+      </form>
       <p class="capacity" aria-live="polite"><span id="stream-count">0</span> / 8</p>
     </header>
 
     <main id="main" class="app-shell">
-      <section class="intro" aria-labelledby="page-title">
-        <div class="intro__copy">
-          <h1 id="page-title">配信を追加</h1>
-          <p>Twitch / YouTubeを最大8画面。選択した配信のチャットだけを表示します。</p>
-        </div>
-
-        <form id="add-form" class="add-form" novalidate>
-          <label for="stream-input">URLまたはTwitchチャンネル名</label>
-          <div class="add-form__row">
-            <input
-              id="stream-input"
-              name="stream"
-              type="text"
-              inputmode="url"
-              autocomplete="off"
-              placeholder="twitch.tv/channel または youtube.com/watch?v=…"
-              aria-describedby="stream-helper"
-              required
-            >
-            <button id="add-button" class="button button--primary" type="submit">配信を追加</button>
-          </div>
-          <p id="stream-helper" class="form-helper">YouTube動画IDは「yt:VIDEO_ID」でも追加できます</p>
-        </form>
-      </section>
+      <h1 id="page-title" class="visually-hidden">配信マルチビュー</h1>
 
       <div id="protocol-warning" class="notice" role="status" hidden>
         `file://`では公式埋め込みが拒否されることがあります。`npm start`で開いてください。

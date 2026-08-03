@@ -1,4 +1,4 @@
-/* Apple Design · compact media workspace · dark material system */
+/* Hallmark · tokens: compact Workbench · inherited dark material system */
 :root {
   --color-paper: oklch(12% 0.012 255);
   --color-paper-2: oklch(16% 0.014 255);
@@ -50,6 +50,11 @@
   --radius-lg: 1.125rem;
   --radius-pill: 999px;
 
+  --size-header: 3.25rem;
+  --size-control: 2.5rem;
+  --size-control-compact: 2.25rem;
+  --size-chat: 22rem;
+
   --shadow-panel: 0 20px 48px color-mix(in oklch, var(--color-shadow) 58%, transparent);
   --shadow-nav: 0 8px 28px color-mix(in oklch, var(--color-shadow) 30%, transparent);
   --z-base: 1;
@@ -58,4 +63,3 @@
   --z-nav: 300;
   --z-toast: 500;
 }
-
